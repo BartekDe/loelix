@@ -1,10 +1,9 @@
 package pl.bartekde.loelix.advert;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.*;
+import pl.bartekde.loelix.advert.request.CreateAdvertisementRequest;
 import pl.bartekde.loelix.appuser.User;
 
 import java.util.List;
@@ -19,6 +18,11 @@ public class AdvertisementController {
     @GetMapping(path = "/user/{user}")
     public List<Advertisement> getUserAdvertisements(@PathVariable User user) {
         return this.advertisementRepository.findByUser(user);
+    }
+
+    @PostMapping(path = "/")
+    public void createAdvertisement(@RequestBody @Validated CreateAdvertisementRequest createAdvertisementRequest) {
+
     }
 
 }

@@ -57,4 +57,15 @@ public class Advertisement {
     public User getUser() {
         return user;
     }
+
+    @Override
+    public String toString() {
+        return "Advertisement{" +
+                "id=" + id +
+                ", name='" + name + '\'' +
+                ", price=" + price +
+                ", isPriceNegotiable=" + isPriceNegotiable +
+                ", user=" + user.getId() +
+                '}';
+    }
 }
