@@ -1,6 +1,6 @@
 package pl.bartekde.loelix.advert;
 
-import pl.bartekde.loelix.appuser.User;
+import pl.bartekde.loelix.user.User;
 
 import javax.persistence.*;
 import java.math.BigDecimal;

@@ -1,7 +1,7 @@
 package pl.bartekde.loelix.advert;
 
 import org.springframework.data.jpa.repository.JpaRepository;
-import pl.bartekde.loelix.appuser.User;
+import pl.bartekde.loelix.user.User;
 
 import java.util.List;
 
