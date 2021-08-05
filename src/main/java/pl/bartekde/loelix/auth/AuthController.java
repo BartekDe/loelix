@@ -39,14 +39,14 @@ public class AuthController {
     private JwtTokenProvider jwtTokenProvider;
 
     @PostMapping("/register")
-    public ResponseEntity register(@Validated @RequestBody UserRegisterDto registrationData) {
+    public ResponseEntity<HttpStatus> register(@Validated @RequestBody UserRegisterDto registrationData) {
         this.userRegisterService.registerUser(registrationData);
-        return new ResponseEntity(HttpStatus.NO_CONTENT);
+        return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
 
     @PostMapping("/login")
-    public ResponseEntity login(@Validated @RequestBody UserLoginDto userLoginDto) {
-//        try {
+    public ResponseEntity<Map<Object, Object>> login(@Validated @RequestBody UserLoginDto userLoginDto) {
+        try {
             this.authManager.authenticate(
                     new UsernamePasswordAuthenticationToken(userLoginDto.email, userLoginDto.password)
             );
@@ -63,9 +63,10 @@ public class AuthController {
             response.put("token", token);
 
             return ResponseEntity.ok(response);
-//        } catch (AuthenticationException e) {
-//            throw new BadCredentialsException("Invalid user email/password supplied.");
-//        }
+        } catch (AuthenticationException e) {
+            // TODO: add logging
+            throw new BadCredentialsException("Invalid user email/password supplied.");
+        }
 
     }
 
