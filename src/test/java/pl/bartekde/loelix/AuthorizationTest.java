@@ -8,6 +8,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.hamcrest.CoreMatchers.is;
 
 import org.hamcrest.Matchers;
+import org.junit.After;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -41,6 +42,11 @@ public class AuthorizationTest {
 
     @Autowired
     private JwtTokenProvider jwtTokenProvider;
+
+    @After
+    public void resetDb() {
+        userRepository.deleteAll();
+    }
 
     @Test
     public void whenUserRegistration_thenUserExists() throws Exception {
