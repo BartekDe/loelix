@@ -2,10 +2,12 @@ package pl.bartekde.loelix;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.hamcrest.CoreMatchers.is;
 
+import org.hamcrest.Matchers;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,11 +17,14 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
+import pl.bartekde.loelix.auth.jwt.JwtTokenProvider;
+import pl.bartekde.loelix.auth.request.UserLoginDto;
 import pl.bartekde.loelix.auth.request.UserRegisterDto;
 import pl.bartekde.loelix.user.User;
 import pl.bartekde.loelix.user.UserRepository;
 import pl.bartekde.loelix.util.JsonUtil;
 
+import java.util.Arrays;
 import java.util.Optional;
 
 @RunWith(SpringRunner.class)
@@ -34,8 +39,11 @@ public class AuthorizationTest {
     @Autowired
     UserRepository userRepository;
 
+    @Autowired
+    private JwtTokenProvider jwtTokenProvider;
+
     @Test
-    public void givenUserRegistered_whenLogin_thenReturnToken() throws Exception {
+    public void whenUserRegistration_thenUserExists() throws Exception {
 
         String email = "test@gmail.com";
 
@@ -44,14 +52,48 @@ public class AuthorizationTest {
         userRegisterDto.name = "Testname";
         userRegisterDto.password = "testpass11";
 
-        mvc.perform(post("/auth/register").contentType(MediaType.APPLICATION_JSON).content(JsonUtil.toJson(userRegisterDto)))
-                .andDo(print())
+        mvc.perform(post("/auth/register")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(JsonUtil.toJson(userRegisterDto))
+                )
                 .andExpect(status().isNoContent())
                 .andExpect(content().string(""));
 
         Optional<User> user = userRepository.findByEmail(email);
 
         assertThat(user.isPresent());
+    }
+
+    @Test
+    public void givenUserRegistered_whenUserLogin_thenReturnToken() throws Exception {
+        String email = "test@gmail.com";
+        String password = "testpass11";
+
+        UserRegisterDto userRegisterDto = new UserRegisterDto();
+        userRegisterDto.email = email;
+        userRegisterDto.name = "Testname";
+        userRegisterDto.password = password;
+
+        mvc.perform(post("/auth/register")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(JsonUtil.toJson(userRegisterDto))
+                )
+                .andExpect(status().isNoContent())
+                .andExpect(content().string(""));
+
+        UserLoginDto userLoginDto = new UserLoginDto();
+        userLoginDto.email = email;
+        userLoginDto.password = password;
+
+        String token = jwtTokenProvider.createToken(email, Arrays.asList("ROLE_USER"));
+
+        mvc.perform(post("/auth/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(JsonUtil.toJson(userLoginDto))
+                )
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("email", is(email)))
+                .andExpect(jsonPath("token", Matchers.startsWith(token.substring(0, 19))));
     }
 
 }
