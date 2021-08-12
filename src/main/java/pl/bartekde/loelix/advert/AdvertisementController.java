@@ -9,7 +9,7 @@ import pl.bartekde.loelix.user.User;
 import java.util.List;
 
 @RestController
-@RequestMapping(path = "advertisements")
+@RequestMapping(path = "advertisement")
 public class AdvertisementController {
 
     @Autowired

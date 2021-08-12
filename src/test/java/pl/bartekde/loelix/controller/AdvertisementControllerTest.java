@@ -1,14 +1,6 @@
 package pl.bartekde.loelix.controller;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.hamcrest.CoreMatchers.is;
-
-import org.hamcrest.Matchers;
-import org.junit.After;
+import org.json.JSONObject;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,21 +11,24 @@ import org.springframework.http.MediaType;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
 import pl.bartekde.loelix.LoelixApplication;
-import pl.bartekde.loelix.auth.jwt.JwtTokenProvider;
 import pl.bartekde.loelix.auth.request.UserLoginDto;
 import pl.bartekde.loelix.auth.request.UserRegisterDto;
 import pl.bartekde.loelix.user.User;
 import pl.bartekde.loelix.user.UserRepository;
 import pl.bartekde.loelix.util.JsonUtil;
 
-import java.util.Arrays;
 import java.util.Optional;
+
+import static org.hamcrest.CoreMatchers.is;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT, classes = LoelixApplication.class)
 @AutoConfigureMockMvc
 @AutoConfigureTestDatabase
-public class AuthorizationTest {
+public class AdvertisementControllerTest {
 
     @Autowired
     private MockMvc mvc;
@@ -41,38 +36,10 @@ public class AuthorizationTest {
     @Autowired
     private UserRepository userRepository;
 
-    @Autowired
-    private JwtTokenProvider jwtTokenProvider;
-
-    @After
-    public void resetDb() {
-        userRepository.deleteAll();
-    }
-
+    // TODO: when testing controllers use some helper classes to perform registration and login
     @Test
-    public void testUserRegistration() throws Exception {
+    public void testNewUserShouldNotHaveAdverts() throws Exception {
 
-        String email = "test@gmail.com";
-
-        UserRegisterDto userRegisterDto = new UserRegisterDto();
-        userRegisterDto.email = email;
-        userRegisterDto.name = "Testname";
-        userRegisterDto.password = "testpass11";
-
-        mvc.perform(post("/auth/register")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(JsonUtil.toJson(userRegisterDto))
-                )
-                .andExpect(status().isNoContent())
-                .andExpect(content().string(""));
-
-        Optional<User> user = userRepository.findByEmail(email);
-
-        assertThat(user.isPresent()).isTrue();
-    }
-
-    @Test
-    public void testUserRegistrationAndTokenReturnOnLogin() throws Exception {
         String email = "test@gmail.com";
         String password = "testpass11";
 
@@ -92,15 +59,29 @@ public class AuthorizationTest {
         userLoginDto.email = email;
         userLoginDto.password = password;
 
-        String token = jwtTokenProvider.createToken(email, Arrays.asList("ROLE_USER"));
-
-        mvc.perform(post("/auth/login")
+        String loginResponse = mvc.perform(post("/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(JsonUtil.toJson(userLoginDto))
                 )
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("email", is(email)))
-                .andExpect(jsonPath("token", Matchers.startsWith(token.substring(0, 19))));
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+
+        String token = new JSONObject(loginResponse)
+                .getString("token");
+
+        Optional<User> user = userRepository.findByEmail(email);
+
+        Long userId = user.map(User::getId).orElse(0L);
+
+        mvc.perform(get("/advertisement/user/" + userId)
+                        .header("Authorization", "Bearer " + token)
+                )
+                .andExpect(status().isOk())
+                .andExpect(content().string("[]"));
+
     }
 
 }
