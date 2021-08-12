@@ -1,4 +1,4 @@
-package pl.bartekde.loelix;
+package pl.bartekde.loelix.controller;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -18,6 +18,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
+import pl.bartekde.loelix.LoelixApplication;
 import pl.bartekde.loelix.auth.jwt.JwtTokenProvider;
 import pl.bartekde.loelix.auth.request.UserLoginDto;
 import pl.bartekde.loelix.auth.request.UserRegisterDto;
@@ -49,7 +50,7 @@ public class AuthorizationTest {
     }
 
     @Test
-    public void whenUserRegistration_thenUserExists() throws Exception {
+    public void testUserRegistration() throws Exception {
 
         String email = "test@gmail.com";
 
@@ -67,11 +68,11 @@ public class AuthorizationTest {
 
         Optional<User> user = userRepository.findByEmail(email);
 
-        assertThat(user.isPresent());
+        assertThat(user.isPresent()).isTrue();
     }
 
     @Test
-    public void givenUserRegistered_whenUserLogin_thenReturnToken() throws Exception {
+    public void testUserRegistrationAndTokenReturnOnLogin() throws Exception {
         String email = "test@gmail.com";
         String password = "testpass11";
 
