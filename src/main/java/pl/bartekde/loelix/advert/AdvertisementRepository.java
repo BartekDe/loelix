@@ -8,5 +8,6 @@ import java.util.List;
 public interface AdvertisementRepository extends JpaRepository<Advertisement, Long> {
 
     public List<Advertisement> findByUser(User user);
+    public Advertisement findByName(String name);
 
 }
